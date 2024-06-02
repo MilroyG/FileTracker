@@ -1,5 +1,6 @@
 package com.example.filetracker;
 
+import static android.content.ContentValues.TAG;
 import static com.example.filetracker.CSVReader.fetchEmployeeListFromCSV;
 
 import android.annotation.SuppressLint;
@@ -10,9 +11,12 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -33,6 +37,8 @@ import android.widget.Button;
 import android.widget.EditText;
 
 
+import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TableLayout;
@@ -41,16 +47,20 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 
 import com.google.android.material.textfield.MaterialAutoCompleteTextView;
+import com.google.mlkit.vision.text.Text;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
@@ -74,17 +84,23 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-
+import com.google.mlkit.vision.common.InputImage;
+import com.google.mlkit.vision.text.TextRecognition;
+import com.google.mlkit.vision.text.TextRecognizer;
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.provider.MediaStore;
 
 
 public class Admin extends AppCompatActivity implements View.OnClickListener {
-
 
     private EditText searchEditText;
     private TableLayout resultsTable;
     private DBHandler dbHandler;
 
-
+    private static final int REQUEST_IMAGE_CAPTURE = 1;
+    private EditText input;
 
 
     // URLs for API endpoints
@@ -95,6 +111,7 @@ public class Admin extends AppCompatActivity implements View.OnClickListener {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_admin);
+      // setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT); // Force portrait orientation
         findViewById(R.id.search).setOnClickListener(this);
         Button scanBtn = findViewById(R.id.scanQRButton);
         scanBtn.setOnClickListener(this);
@@ -240,9 +257,28 @@ public class Admin extends AppCompatActivity implements View.OnClickListener {
     //--------------------------------------------------------------------------------------------//
                                         // Scanning of QrCode
     @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        // Lock the orientation to portrait mode
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+    }
+
+    // Inside your camera capture method
+    private void captureImage() {
+        // Launch camera to capture image
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+        } else {
+            Toast.makeText(this, "No camera app found", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == IntentIntegrator.REQUEST_CODE) {
+            // Handle QR code scan result
             IntentResult intentResult = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
             if (intentResult != null) {
                 if (intentResult.getContents() != null) {
@@ -254,8 +290,54 @@ public class Admin extends AppCompatActivity implements View.OnClickListener {
                     Toast.makeText(this, "Scan canceled or failed", Toast.LENGTH_SHORT).show();
                 }
             }
+        } else if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
+            // Handle image capture result
+            Bundle extras = data.getExtras();
+            Bitmap imageBitmap = (Bitmap) extras.get("data");
+            if (imageBitmap != null) {
+                recognizeText(imageBitmap);
+            } else {
+                Toast.makeText(this, "Failed to capture image", Toast.LENGTH_SHORT).show();
+            }
+
         }
     }
+    private Bitmap rotateImageIfRequired(Context context, Bitmap img) {
+        // Rotate the image based on EXIF data or other methods
+        Matrix matrix = new Matrix();
+        matrix.postRotate(170); // Rotate as needed, adjust the degree as necessary
+        return Bitmap.createBitmap(img, 0, 0, img.getWidth(), img.getHeight(), matrix, true);
+    }
+
+
+
+    // Inside the recognizeText method
+    private void recognizeText(Bitmap bitmap) {
+        InputImage image = InputImage.fromBitmap(bitmap, 0);
+        TextRecognizer recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
+
+        recognizer.process(image)
+                .addOnSuccessListener(new OnSuccessListener<Text>() {
+                    @Override
+                    public void onSuccess(Text visionText) {
+                        String recognizedText = visionText.getText();
+                        Log.d("RecognizedText", "Recognized Text: " + recognizedText); // Add this log statement
+                        if(input != null) {
+                            input.setText(recognizedText); // Set recognized text to the input field
+                        } else {
+                            Log.e("RecognizedText", "Input EditText is null");
+                        }
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(Admin.this, "Text recognition failed", Toast.LENGTH_SHORT).show();
+                        Log.e("RecognizedText", "Text recognition failed: " + e.getMessage()); // Add this log statement
+                    }
+                });
+    }
+
 
     //--------------------------------------------------------------------------------------------//
                                  // Dialog Box for Employee
@@ -407,7 +489,9 @@ public class Admin extends AppCompatActivity implements View.OnClickListener {
         // Inflate a custom layout for the dialog content
         View dialogLayout = getLayoutInflater().inflate(R.layout.custom_filename_dialog, null);
         ScrollView scrollView = dialogLayout.findViewById(R.id.scroll_view);
-        final EditText input = dialogLayout.findViewById(R.id.filename_edit_text);
+         input = dialogLayout.findViewById(R.id.filename_edit_text);
+        final ImageView cameraButton = dialogLayout.findViewById(R.id.ocr_button);
+
 
         // Set custom positive button with color
         builder.setPositiveButton("OK", null); // Set null to delay the automatic closing of the dialog
@@ -439,6 +523,15 @@ public class Admin extends AppCompatActivity implements View.OnClickListener {
                         }
                     }
                 });
+
+                // Set onClickListener for the camera button
+                cameraButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        // Invoke camera to capture image for text recognition
+                        dispatchTakePictureIntent();
+                    }
+                });
             }
         });
 
@@ -448,6 +541,14 @@ public class Admin extends AppCompatActivity implements View.OnClickListener {
         dialog.show();
     }
 
+    private void dispatchTakePictureIntent() {
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+        } else {
+            Toast.makeText(this, "No camera app found", Toast.LENGTH_SHORT).show();
+        }
+    }
 
 
 

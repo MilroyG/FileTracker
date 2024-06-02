@@ -2,22 +2,22 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-<!--    <item-->
-<!--        android:id="@+id/favorite"-->
-<!--        android:icon="@drawable/ic_favorite"-->
-<!--        android:title="Favourites"-->
-<!--        app:showAsAction="ifRoom" />-->
+<!--&lt;!&ndash;    <item&ndash;&gt;-->
+<!--&lt;!&ndash;        android:id="@+id/favorite"&ndash;&gt;-->
+<!--&lt;!&ndash;        android:icon="@drawable/ic_favorite"&ndash;&gt;-->
+<!--&lt;!&ndash;        android:title="Favourites"&ndash;&gt;-->
+<!--&lt;!&ndash;        app:showAsAction="ifRoom" />&ndash;&gt;-->
 
-<!--    <item-->
-<!--        android:id="@+id/search"-->
-<!--        android:icon="@drawable/ic_search"-->
-<!--        android:title="Search"-->
-<!--        app:showAsAction="ifRoom" />-->
+<!--&lt;!&ndash;    <item&ndash;&gt;-->
+<!--&lt;!&ndash;        android:id="@+id/search"&ndash;&gt;-->
+<!--&lt;!&ndash;        android:icon="@drawable/ic_search"&ndash;&gt;-->
+<!--&lt;!&ndash;        android:title="Search"&ndash;&gt;-->
+<!--&lt;!&ndash;        app:showAsAction="ifRoom" />&ndash;&gt;-->
 
-<!--    <item-->
-<!--        android:id="@+id/more"-->
-<!--        android:icon="@drawable/ic_search"-->
-<!--        android:title="More Options"-->
-<!--        app:showAsAction="never" />-->
+<!--&lt;!&ndash;    <item&ndash;&gt;-->
+<!--&lt;!&ndash;        android:id="@+id/more"&ndash;&gt;-->
+<!--&lt;!&ndash;        android:icon="@drawable/ic_search"&ndash;&gt;-->
+<!--&lt;!&ndash;        android:title="More Options"&ndash;&gt;-->
+<!--&lt;!&ndash;        app:showAsAction="never" />&ndash;&gt;-->
 
 </menu>

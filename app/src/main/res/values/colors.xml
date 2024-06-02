@@ -12,6 +12,6 @@
     <color name="indigo_A200_d8">#d84c73fd</color>
     <color name="indigo_A200">#4c73fd</color>
     <color name="blue_gray_900">#333333</color>
-    <color name="deep_purple_A700">#7600ff</color>
+<!--    <color name="deep_purple_A700">#7600ff</color>-->
 <!--    <color name="white_A700">#ffffff</color>-->
 </resources>

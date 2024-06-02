@@ -26,7 +26,19 @@
             android:layout_height="wrap_content"
             android:inputType="text|textMultiLine"
             android:maxLines="1000" />
+
+        <ImageView
+            android:id="@+id/ocr_button"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_gravity="start"
+            android:layout_marginTop="5dp"
+            android:contentDescription="OCR Camera"
+            android:src="@drawable/ocr"
+            />
+
     </com.google.android.material.textfield.TextInputLayout>
+
 
 </LinearLayout>
     <!-- Additional views can be added here if needed -->

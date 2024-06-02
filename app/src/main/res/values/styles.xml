@@ -24,6 +24,6 @@
 
     </style>
     <style name="groupStyleindigo_A200_d8cornerRadius">
-
+        <item name="android:statusBarColor">@color/colorPrimaryVariant</item>
     </style>
 </resources>
