@@ -1,4 +1,10 @@
 <resources>
-    <string name="app_name">FileTracker</string>
+    <string name="app_name">WRD File Tracker</string>
     <string name="searchbar_hint" />
+    <string name="file_tracker">File Tracker</string>
+    <string name="login">Login</string>
+    <string name="image">Image</string>
+    <string name="wrd_filetracker">WRD FileTracker</string>
+    <string name="search">Search</string>
+    <string name="scan">Scan</string>
 </resources>

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
@@ -14,21 +13,21 @@
         android:layout_alignParentTop="true"
         android:background="@drawable/rounded_background">
         <ImageView
-            android:layout_width="match_parent"
-            android:layout_height="127dp"
-            android:src="@drawable/goa"
+            android:layout_width="107dp"
+            android:layout_height="107dp"
+            android:src="@drawable/android_logo"
             android:layout_gravity="center"
-            android:layout_marginTop="10dp"
-            android:layout_marginBottom="30dp"
-            />
+            android:layout_marginTop="30dp"
+            android:layout_marginBottom="20dp"
+            android:contentDescription="@string/image" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="50dp"
-            android:hint="FileTracker"
+            android:hint="@string/wrd_filetracker"
             android:textAlignment="center"
             android:textColorHint="@color/white"
-            android:textSize="30dp"
+            android:textSize="30sp"
             />
 
 
@@ -53,10 +52,11 @@
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="16dp"
             android:background="@drawable/button_background"
-            android:text="Search"
-            android:textColor="@color/black"
-            android:textSize="25dp"
+            android:text="@string/search"
+
+            android:textSize="25sp"
             app:icon="@drawable/search_icon"
+            android:textColor="@color/black"
             app:iconSize="30dp"
             app:iconTint="@color/white"
             app:iconTintMode="multiply"/>
@@ -69,9 +69,9 @@
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="30dp"
             android:background="@drawable/button_background"
-            android:text="Scan"
+            android:text="@string/scan"
             android:textColor="@color/black"
-            android:textSize="30dp"
+            android:textSize="30sp"
             app:icon="@drawable/qr_icon"
             app:iconSize="30dp"
             app:iconTint="@color/white"

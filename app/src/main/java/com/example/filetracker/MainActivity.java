@@ -84,8 +84,10 @@ public class MainActivity extends AppCompatActivity {
                 String division = divisionEditText.getText().toString().trim();
                 String password = editTextPassword.getText().toString();
 
+                // Hardcoded password
+                final String PASSWORD = "goawrd2000";
                 // Check if all fields are not empty
-                if (!employeeName.isEmpty() && !division.isEmpty() && !password.isEmpty()) {
+                if (!employeeName.isEmpty() && !division.isEmpty() && password.equals(PASSWORD)) {
                     // Insert data into the Users table
                     dbHandler.insertUserData(employeeName, division);
 

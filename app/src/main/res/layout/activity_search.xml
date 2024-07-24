@@ -25,7 +25,7 @@
             android:layout_width="match_parent"
             android:layout_height="50dp"
             android:layout_marginTop="30dp"
-            android:hint="FileTracker"
+            android:hint="WRD FileTracker"
             android:textAlignment="center"
             android:textColorHint="@color/white"
             android:textSize="30dp"

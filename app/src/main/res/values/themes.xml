@@ -14,7 +14,7 @@
     <color name="colorOnSurface">#000000</color>
     <color name="colorOnError">#FFFFFF</color>
 
-    <style name="Base.Theme.FileTracker" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="Base.Theme.FileTracker" parent="Theme.Material3.Light.NoActionBar">
 
 
         <!-- Customize your light theme here. -->

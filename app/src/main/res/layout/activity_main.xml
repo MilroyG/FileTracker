@@ -22,7 +22,7 @@
             android:layout_margin="50dp"
             app:cardCornerRadius="30dp"
             app:cardElevation="20dp"
-            android:background="@color/white">
+            >
 
 
             <LinearLayout
@@ -39,10 +39,10 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="40dp"
                     android:gravity="center"
-                    android:text="File Tracker"
+                    android:text="WRD FileTracker"
                     android:textAlignment="center"
-                    android:textColor="@color/purple"
-                    android:textSize="36sp"
+                    android:textColor="#0C1DBB"
+                    android:textSize="32sp"
                     android:textStyle="bold" />
 
 
@@ -79,7 +79,7 @@
                         android:drawableStart="@drawable/login_vector"
                         android:drawablePadding="8dp"
                         android:hint="Division"
-                        android:inputType="none"/>
+                        android:inputType="none" />
 
                 </com.google.android.material.textfield.TextInputLayout>
 
@@ -111,8 +111,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="60dp"
                     android:layout_marginTop="30dp"
-                    android:backgroundTint="@color/purple"
-                    android:text="Login"
+                    android:backgroundTint="#0D20C9"
+                    android:text="@string/login"
                     android:textSize="18sp"
                     app:cornerRadius="20dp" />
 
