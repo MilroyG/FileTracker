@@ -8,13 +8,19 @@ material = "1.11.0"
 activity = "1.9.0"
 constraintlayout = "2.1.4"
 filamentAndroid = "1.17.1"
-firebaseDatabase = "20.3.1"
+firebaseDatabase = "21.0.0"
+playServicesVision = "20.1.3"
+textRecognition = "16.0.0"
+ucrop = "2.2.8"
 volley = "1.2.1"
 firebaseCrashlyticsBuildtools = "2.9.9"
 uiAndroid = "1.6.7"
 foundationAndroid = "1.6.7"
 material3Android = "1.2.1"
 kotlin = "2.0.0-RC2"
+visionCommon = "17.3.0"
+playServicesMlkitTextRecognitionCommon = "19.0.0"
+playServicesMlkitTextRecognition = "19.0.0"
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -26,10 +32,16 @@ activity = { group = "androidx.activity", name = "activity", version.ref = "acti
 constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
 filament-android = { group = "com.google.ar.sceneform", name = "filament-android", version.ref = "filamentAndroid" }
 firebase-database = { group = "com.google.firebase", name = "firebase-database", version.ref = "firebaseDatabase" }
+play-services-vision = { module = "com.google.android.gms:play-services-vision", version.ref = "playServicesVision" }
+text-recognition = { module = "com.google.mlkit:text-recognition", version = "16.0.0" }
+ucrop = { module = "com.github.yalantis:ucrop", version.ref = "ucrop" }
 volley = { group = "com.android.volley", name = "volley", version.ref = "volley" }
 ui-android = { group = "androidx.compose.ui", name = "ui-android", version.ref = "uiAndroid" }
 foundation-android = { group = "androidx.compose.foundation", name = "foundation-android", version.ref = "foundationAndroid" }
 material3-android = { group = "androidx.compose.material3", name = "material3-android", version.ref = "material3Android" }
+vision-common = { group = "com.google.mlkit", name = "vision-common", version.ref = "visionCommon" }
+play-services-mlkit-text-recognition-common = { group = "com.google.android.gms", name = "play-services-mlkit-text-recognition-common", version = "19.0.0" }
+play-services-mlkit-text-recognition = { group = "com.google.android.gms", name = "play-services-mlkit-text-recognition", version = "19.0.0" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

@@ -19,3 +19,13 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+# Keep all classes in androidx.appcompat.widget package
+-keep class androidx.appcompat.widget.** { *; }
+
+# Keep CropImageActivity and related classes from the cropper library
+-keep class com.theartofdev.edmodo.cropper.** { *; }
+
+# Other Proguard rules you might have
+-dontwarn com.yalantis.ucrop**
+-keep class com.yalantis.ucrop** { *; }
+-keep interface com.yalantis.ucrop** { *; }

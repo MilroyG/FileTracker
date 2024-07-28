@@ -24,9 +24,14 @@
             android:id="@+id/filename_edit_text"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="text|textMultiLine"
-            android:maxLines="1000" />
-
+            android:textDirection="ltr"
+            android:inputType="textMultiLine"
+            android:gravity="start|top"
+            android:lines="10"
+        android:maxLines="20"
+        android:scrollbars="none"
+            android:scrollHorizontally="false"
+        />
         <ImageView
             android:id="@+id/ocr_button"
             android:layout_width="50dp"

@@ -2,7 +2,7 @@ package com.example.filetracker;
 
 import static android.content.ContentValues.TAG;
 import static com.example.filetracker.CSVReader.fetchEmployeeListFromCSV;
-
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
@@ -12,18 +12,23 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Matrix;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.InputType;
 import android.util.Log;
 
+import android.util.SparseArray;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 
@@ -51,30 +56,39 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.vision.Frame;
+import com.google.android.gms.vision.text.TextBlock;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 
 import com.google.android.material.textfield.MaterialAutoCompleteTextView;
+import com.google.android.material.textfield.TextInputEditText;
 import com.google.mlkit.vision.text.Text;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -88,9 +102,13 @@ import com.google.mlkit.vision.common.InputImage;
 import com.google.mlkit.vision.text.TextRecognition;
 import com.google.mlkit.vision.text.TextRecognizer;
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
+import com.yalantis.ucrop.BuildConfig;
+import com.yalantis.ucrop.UCrop;
+
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.provider.MediaStore;
+
 
 
 public class Admin extends AppCompatActivity implements View.OnClickListener {
@@ -98,10 +116,13 @@ public class Admin extends AppCompatActivity implements View.OnClickListener {
     private EditText searchEditText;
     private TableLayout resultsTable;
     private DBHandler dbHandler;
-
+    private String currentPhotoPath;
     private static final int REQUEST_IMAGE_CAPTURE = 1;
     private EditText input;
-
+    private static final int REQUEST_PERMISSIONS = 2;
+    private static final int REQUEST_CROP_IMAGE = 2;
+    private static final int REQUEST_CROP = UCrop.REQUEST_CROP;
+    private Uri imageUri;
 
     // URLs for API endpoints
     private static final String URL2 = "https://goawrd.gov.in/file-tracker/scan?code=<code>&employee=<employee>&username=<username>";
@@ -111,7 +132,8 @@ public class Admin extends AppCompatActivity implements View.OnClickListener {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_admin);
-      // setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT); // Force portrait orientation
+        requestPermissions();
+        // setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT); // Force portrait orientation
         findViewById(R.id.search).setOnClickListener(this);
         Button scanBtn = findViewById(R.id.scanQRButton);
         scanBtn.setOnClickListener(this);
@@ -124,10 +146,36 @@ public class Admin extends AppCompatActivity implements View.OnClickListener {
         // Create an instance of DBHandler
         dbHandler = new DBHandler(this);
         downloadAndStoreCSVData();
-           }
+    }
 
     //--------------------------------------------------------------------------------------------//
+    private void requestPermissions() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
 
+            ActivityCompat.requestPermissions(this,
+                    new String[]{
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                            Manifest.permission.READ_EXTERNAL_STORAGE,
+                            Manifest.permission.CAMERA
+                    }, REQUEST_PERMISSIONS);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_PERMISSIONS) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permissions granted
+                // You can proceed with your functionality here
+            } else {
+                // Permissions denied
+                Toast.makeText(this, "Permissions denied", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
     @Override
     public void onClick(View view) {
         if (view.getId() == R.id.scanQRButton) {
@@ -142,7 +190,7 @@ public class Admin extends AppCompatActivity implements View.OnClickListener {
         } else if (view.getId() == R.id.search) {
             Intent intent = new Intent(Admin.this, Search.class);
             startActivity(intent);
-       }
+        }
     }
 
     //--------------------------------------------------------------------------------------------//
@@ -160,7 +208,7 @@ public class Admin extends AppCompatActivity implements View.OnClickListener {
 
 
     //Background Task Network + Csv Data parse
-   private class DownloadCSVTask extends AsyncTask<String, Void, String> {
+    private class DownloadCSVTask extends AsyncTask<String, Void, String> {
         @Override
         protected String doInBackground(String... urls) {
             // Background task to download CSV data
@@ -255,7 +303,7 @@ public class Admin extends AppCompatActivity implements View.OnClickListener {
 
 
     //--------------------------------------------------------------------------------------------//
-                                        // Scanning of QrCode
+    // Scanning of QrCode
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
@@ -277,6 +325,7 @@ public class Admin extends AppCompatActivity implements View.OnClickListener {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+
         if (requestCode == IntentIntegrator.REQUEST_CODE) {
             // Handle QR code scan result
             IntentResult intentResult = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
@@ -289,19 +338,65 @@ public class Admin extends AppCompatActivity implements View.OnClickListener {
                 } else {
                     Toast.makeText(this, "Scan canceled or failed", Toast.LENGTH_SHORT).show();
                 }
+            } else {
+                Toast.makeText(this, "IntentResult is null", Toast.LENGTH_SHORT).show();
             }
         } else if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
-            // Handle image capture result
-            Bundle extras = data.getExtras();
-            Bitmap imageBitmap = (Bitmap) extras.get("data");
-            if (imageBitmap != null) {
-                recognizeText(imageBitmap);
+            Uri imageUri = Uri.fromFile(new File(currentPhotoPath));
+            if (imageUri != null) {
+                startCropActivity(imageUri);
             } else {
-                Toast.makeText(this, "Failed to capture image", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Image capture failed", Toast.LENGTH_SHORT).show();
             }
-
+        } else if (requestCode == UCrop.REQUEST_CROP && resultCode == RESULT_OK) {
+            Uri resultUri = UCrop.getOutput(data);
+            if (resultUri != null) {
+                try {
+                    Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), resultUri);
+                    recognizeText(bitmap); // Process the cropped image with OCR
+                    galleryAddPic(resultUri.getPath());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    Toast.makeText(this, "Failed to load cropped image", Toast.LENGTH_SHORT).show();
+                }
+            }
+        } else if (resultCode == UCrop.RESULT_ERROR) {
+            final Throwable cropError = UCrop.getError(data);
+            if (cropError != null) {
+                Log.e(TAG, "Crop error: " + cropError.getMessage());
+                Toast.makeText(this, "Crop error: " + cropError.getMessage(), Toast.LENGTH_SHORT).show();
+            }
         }
     }
+    private void galleryAddPic(String imagePath) {
+        Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+        File f = new File(imagePath);
+        Uri contentUri = Uri.fromFile(f);
+        mediaScanIntent.setData(contentUri);
+        this.sendBroadcast(mediaScanIntent);
+    }
+
+    private void startCropActivity(Uri sourceUri) {
+        File storageDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+        if (!storageDir.exists()) {
+            storageDir.mkdirs(); // Make sure the directory exists
+        }
+        Uri destinationUri = Uri.fromFile(new File(getCacheDir(), "cropped"));
+        UCrop.of(sourceUri, destinationUri)
+                .withAspectRatio(16, 4)
+                .withMaxResultSize(1080, 1920)
+                .start(this);
+    }
+
+    private void checkPermissions() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_PERMISSIONS);
+        }
+    }
+
+
+
     private Bitmap rotateImageIfRequired(Context context, Bitmap img) {
         // Rotate the image based on EXIF data or other methods
         Matrix matrix = new Matrix();
@@ -311,6 +406,7 @@ public class Admin extends AppCompatActivity implements View.OnClickListener {
 
 
 
+    // Inside the recognizeText method
     // Inside the recognizeText method
     private void recognizeText(Bitmap bitmap) {
         InputImage image = InputImage.fromBitmap(bitmap, 0);
@@ -339,8 +435,10 @@ public class Admin extends AppCompatActivity implements View.OnClickListener {
     }
 
 
+
+
     //--------------------------------------------------------------------------------------------//
-                                 // Dialog Box for Employee
+    // Dialog Box for Employee
 
     private void openDialogForEmployeeName(final String scannedData, final String username) {
         final String[] parts = scannedData.split(";");
@@ -396,7 +494,7 @@ public class Admin extends AppCompatActivity implements View.OnClickListener {
 
     //--------------------------------------------------------------------------------------------//
 
-                                //RequestUrl2
+    //RequestUrl2
 
 
     private void sendRequestToURL2(final String code, final String username, final String employeeName) {
@@ -474,7 +572,7 @@ public class Admin extends AppCompatActivity implements View.OnClickListener {
 
     //--------------------------------------------------------------------------------------------//
 
-                            //Filename Dialog
+    //Filename Dialog
 
     private void promptForFilename(final String code) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -489,7 +587,7 @@ public class Admin extends AppCompatActivity implements View.OnClickListener {
         // Inflate a custom layout for the dialog content
         View dialogLayout = getLayoutInflater().inflate(R.layout.custom_filename_dialog, null);
         ScrollView scrollView = dialogLayout.findViewById(R.id.scroll_view);
-         input = dialogLayout.findViewById(R.id.filename_edit_text);
+        input = dialogLayout.findViewById(R.id.filename_edit_text);
         final ImageView cameraButton = dialogLayout.findViewById(R.id.ocr_button);
 
 
@@ -541,19 +639,55 @@ public class Admin extends AppCompatActivity implements View.OnClickListener {
         dialog.show();
     }
 
+
     private void dispatchTakePictureIntent() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
-        } else {
-            Toast.makeText(this, "No camera app found", Toast.LENGTH_SHORT).show();
+            File photoFile = null;
+            try {
+                photoFile = createImageFile();
+            } catch (IOException ex) {
+                Log.e("MainActivity", "Error occurred while creating the file", ex);
+            }
+
+            if (photoFile != null) {
+                Uri photoURI = FileProvider.getUriForFile(this,
+                        getApplicationContext().getPackageName() + ".fileprovider",
+                        photoFile);
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+                startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+            }
         }
     }
 
 
+    private File createImageFile() throws IOException {
+        // Create an image file name
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date());
+        String imageFileName = "JPEG_" + timeStamp + "_";
+        File storageDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+        if (!storageDir.exists()) {
+            storageDir.mkdirs(); // Make sure the directory exists
+        }
+        File image = File.createTempFile(
+                imageFileName,  /* prefix */
+                ".jpg",         /* suffix */
+                storageDir      /* directory */
+        );
+
+        // Save a file: path for use with ACTION_VIEW intents
+        currentPhotoPath = image.getAbsolutePath();
+        return image;
+    }
+
+
+
+
+
+
 
     //--------------------------------------------------------------------------------------------//
-                                //RequestUrl3
+    //RequestUrl3
 
     private void sendRequestToURL3(final String code, final String filename) {
         String url = URL3.replace("<code>", code)
@@ -612,4 +746,4 @@ public class Admin extends AppCompatActivity implements View.OnClickListener {
         intentIntegrator.initiateScan();
     }
 
-   }
+}

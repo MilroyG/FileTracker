@@ -11,8 +11,8 @@ android {
         applicationId "com.wrdfiletracker"
         minSdk 26
         targetSdk 34
-        versionCode 5
-        versionName "1.4"
+        versionCode 6
+        versionName "1.5"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -51,6 +51,9 @@ dependencies {
     implementation libs.ui.android
     implementation libs.foundation.android
     implementation libs.material3.android
+    implementation libs.vision.common
+    implementation libs.play.services.mlkit.text.recognition.common
+    implementation libs.play.services.mlkit.text.recognition
 
     testImplementation libs.junit
     androidTestImplementation libs.ext.junit
@@ -63,8 +66,8 @@ dependencies {
     implementation 'com.android.volley:volley:1.2.1'
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation 'com.google.android.material:material:1.12.0'
-    implementation 'com.google.mlkit:text-recognition:16.0.0'
-
-
-
+    implementation libs.text.recognition
+    implementation libs.play.services.vision
+//    implementation 'com.github.yalantis:ucrop:2.2.8'
+    implementation 'com.github.yalantis:ucrop:2.2.8-native'
 }
